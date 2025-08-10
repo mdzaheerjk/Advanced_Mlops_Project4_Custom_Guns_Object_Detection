@@ -1,0 +1,162 @@
+------------------------------------------------- .Astro File Deployment Code ------------------------------ 
+
+
+deployments:
+  - name: dev
+    executor: celery
+    image:
+      name: quay.io/astronomer/astro-runtime:7.3.0
+    env: dev
+    volumes:
+      - ./include:/usr/local/airflow/include
+
+
+
+
+------------------------------------------------ CONFIGURATIONS ---------------------------------
+
+
+Connection ID: google_cloud_default
+Connection Type: Google Cloud
+Keyfile Path: /usr/local/airflow/include/gcp-key.json
+Scopes: https://www.googleapis.com/auth/cloud-platform
+
+
+
+postgres_default
+Posgtres
+Host : Container name
+User name password databse : postgres
+Port : 5432
+
+
+------------------------------------------------ DAG FILE CODE ----------------------------------
+
+
+
+from airflow import DAG
+from airflow.providers.google.cloud.transfers.gcs_to_local import GCSToLocalFilesystemOperator
+from airflow.providers.google.cloud.operators.gcs import GCSListObjectsOperator
+from airflow.operators.python import PythonOperator
+from airflow.hooks.base_hook import BaseHook
+from datetime import datetime
+import pandas as pd
+import sqlalchemy
+
+def load_to_sql(file_path):
+    conn = BaseHook.get_connection('postgres_default')  
+    engine = sqlalchemy.create_engine(f"postgresql+psycopg2://{conn.login}:{conn.password}@testing-3_607202-postgres-1:{conn.port}/{conn.schema}")
+    df = pd.read_csv(file_path)
+    df.to_sql(name="titanic", con=engine, if_exists="replace", index=False)
+
+# Define the DAG
+with DAG(
+    dag_id="extract_titanic_data",
+    schedule_interval=None, 
+    start_date=datetime(2023, 1, 1),
+    catchup=False,
+) as dag:
+
+    list_files = GCSListObjectsOperator(
+        task_id="list_files",
+        bucket="my-bucket45", 
+    )
+
+    download_file = GCSToLocalFilesystemOperator(
+        task_id="download_file",
+        bucket="my-bucket45", 
+        object_name="Titanic-Dataset.csv", 
+        filename="/tmp/Titanic-Dataset.csv", 
+    )
+
+    load_data = PythonOperator(
+        task_id="load_to_sql",
+        python_callable=load_to_sql,
+        op_kwargs={"file_path": "/tmp/Titanic-Dataset.csv"}
+    )
+
+    list_files >> download_file >> load_data
+
+
+
+
+---------------------------------------------------------------- INSTALL REDIS --------------------------------------
+
+
+docker pull redis
+
+docker run -d --name redis-container -p 6379:6379 redis
+
+
+
+------------------------------------------------------------ ML MONITORING ---------------------------------------
+
+
+----------------------- DOCKER-COMPOSE.YAML
+
+version: '3'
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "admin"  # Admin password for Grafana
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+networks:
+  monitoring:
+    driver: bridge
+
+
+----------------------------------- PROMETHEUS.YAML
+
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'flask_app'
+    static_configs:
+      - targets: ['host.docker.internal:5000']
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

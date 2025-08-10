@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Survival Prediction</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Survival Prediction</h1>
+        <form action="/predict" method="POST" class="prediction-form">
+            <div class="form-group">
+                <label for="Age">Age:</label>
+                <input type="number" step="0.01" id="Age" name="Age" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Fare">Fare:</label>
+                <input type="number" step="0.01" id="Fare" name="Fare" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Pclass">Pclass:</label>
+                <input type="number" step="0.01" id="Pclass" name="Pclass" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Sex">Sex:</label>
+                <select id="Sex" name="Sex" required>
+                    <option value="0">Male</option>
+                    <option value="1">Female</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="Embarked">Embarked:</label>
+                <select id="Embarked" name="Embarked" required>
+                    <option value="0">Cherbourg</option>
+                    <option value="1">Queenstown</option>
+                    <option value="2">Southampton</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="Familysize">Family Size:</label>
+                <input type="number" id="Familysize" name="Familysize" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Isalone">Is Alone:</label>
+                <select id="Isalone" name="Isalone" required>
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="HasCabin">Has Cabin:</label>
+                <select id="HasCabin" name="HasCabin" required>
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="Title">Title:</label>
+                <input type="number" id="Title" name="Title" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Pclass_Fare">Pclass Fare:</label>
+                <input type="number" step="0.01" id="Pclass_Fare" name="Pclass_Fare" required>
+            </div>
+
+            <div class="form-group">
+                <label for="Age_Fare">Age Fare:</label>
+                <input type="number" step="0.01" id="Age_Fare" name="Age_Fare" required>
+            </div>
+
+            <button type="submit" class="btn">Predict</button>
+        </form>
+
+        <div class="prediction-result">
+            <h3>Prediction Result</h3>
+            {% if prediction_text %}
+            <p>{{ prediction_text }}</p>
+            {% else %}
+            <p>No predictions yet made...</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
